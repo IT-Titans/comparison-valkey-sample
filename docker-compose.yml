@@ -1,0 +1,12 @@
+volumes:
+  valkey-data:
+    driver: local
+
+services:
+  valkey:
+    image: "valkey/valkey:${VALKEY_VERSION:?error}"
+    ports:
+      # Default Valkey port. Change in .env file as required.
+      - "${VALKEY_PORT:?error}:6379/tcp"
+    volumes:
+      - valkey-data:/data

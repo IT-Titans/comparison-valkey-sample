@@ -1,0 +1,11 @@
+@valkey_HostAddress = http://localhost:5250
+
+GET {{valkey_HostAddress}}/weatherforecast/Berlin
+Accept: application/json
+
+###
+
+GET {{valkey_HostAddress}}/invalidate/Berlin
+Accept: application/json
+
+###
