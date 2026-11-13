@@ -7,7 +7,8 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-const string valkeyConfiguration = "localhost:6379";
+var valkeyConfiguration = builder.Configuration.GetConnectionString("Valkey")
+    ?? throw new InvalidOperationException("The connection string 'Valkey' is not configured.");
 
 var cacheImplementation = args.Length == 1 
     ? args[0] 
