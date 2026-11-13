@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
+﻿using System.Text.Json;
+
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Valkey.Api.Services.Caching;
 
@@ -18,20 +20,43 @@ public class ValkeyDistributedCachingService : ICachingService
     }
 
     /// <inheritdoc />
-    public Task SetAsync<T>(string key, T? value, TimeSpan expiry)
+    public async Task SetAsync<T>(string key, T? value, TimeSpan expiry)
     {
-        throw new NotSupportedException("IDistributedCache is not fully supported");
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
+        _logger.LogInformation("Storing value for key '{Key}' into cache", key);
+        await _cache.SetStringAsync(
+            key,
+            JsonSerializer.Serialize(value),
+            new DistributedCacheEntryOptions() { AbsoluteExpirationRelativeToNow = expiry, }).ConfigureAwait(false);
+        _logger.LogInformation("Stored value for key '{Key}' into cache", key);
     }
 
     /// <inheritdoc />
-    public Task<T?> GetAsync<T>(string key)
+    public async Task<T?> GetAsync<T>(string key)
     {
-        throw new NotSupportedException("IDistributedCache is not fully supported");
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
+        _logger.LogInformation("Looking for a cached value for key '{Key}'", key);
+        var value = await _cache.GetStringAsync(key).ConfigureAwait(false);
+
+        if (value is null)
+        {
+            _logger.LogInformation("No cached value found for key '{Key}'", key);
+            return default(T);
+        }
+
+        _logger.LogInformation("Found cached value for key '{Key}'", key);
+        return JsonSerializer.Deserialize<T>(value);
     }
 
     /// <inheritdoc />
-    public Task InvalidateAsync(string key)
+    public async Task InvalidateAsync(string key)
     {
-        throw new NotSupportedException("IDistributedCache is not fully supported");
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
+        _logger.LogInformation("Invalidating the cached value for key '{Key}'", key);
+        await _cache.RemoveAsync(key).ConfigureAwait(false);
+        _logger.LogInformation("Invalidated the cached value for key '{Key}'", key);
     }
 }
